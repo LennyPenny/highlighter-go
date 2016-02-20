@@ -66,7 +66,8 @@ namespace highlighter
 
                     if (_parser.CurrentTime - lastKill > timeLimit)
                     {
-                        _highlights.Add(_parser.IngameTick, $"{counter} kills in quick succession");
+                        if (counter >1)
+                            _highlights.Add(start - (int) _parser.TickRate * 2, $"{counter} kills in quick succession");
 
                         counter = 0;
                         start = 0;

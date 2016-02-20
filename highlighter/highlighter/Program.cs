@@ -19,8 +19,6 @@ namespace highlighter
         {
             Settings = JsonConvert.DeserializeObject(File.ReadAllText("settings.json"));
 
-            var results = new Dictionary<string, SortedDictionary<int, string>>();
-
             var demos = new List<HighlightFinder>();
 
             if (args.Length > 0)
@@ -38,6 +36,8 @@ namespace highlighter
                 }
             }
 
+            var results = new Dictionary<string, SortedDictionary<int, string>>();
+
             var highlightTasks = new List<Task>();
             foreach (var demo in demos)
             {
@@ -48,6 +48,10 @@ namespace highlighter
             }
 
             Task.WaitAll(highlightTasks.ToArray());
+
+            var output = JsonConvert.SerializeObject(results, Formatting.Indented);
+
+            File.WriteAllText("output.json", output);
         }
     }
 }
