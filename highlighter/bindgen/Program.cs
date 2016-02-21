@@ -10,6 +10,14 @@ namespace bindgen
     {
         static void Main(string[] args)
         {
+            var inputpath = "";
+
+            if (args.Length == 1)
+                inputpath = args[1];
+            else
+                inputpath = "output.json";
+
+
         }
     }
 }
