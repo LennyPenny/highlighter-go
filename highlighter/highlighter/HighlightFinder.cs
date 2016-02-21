@@ -16,6 +16,7 @@ namespace highlighter
         private DemoParser _parser;
 
         public string Path { get; private set; }
+        public string Map { get; private set; }
 
         public HighlightFinder(string path)
         {
@@ -23,6 +24,8 @@ namespace highlighter
             _parser = new DemoParser(File.OpenRead(path));
 
             _parser.ParseHeader();
+
+            Map = _parser.Map;
 
             _highlights = new SortedDictionary<int, string>();
 

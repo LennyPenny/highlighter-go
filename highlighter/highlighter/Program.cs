@@ -15,6 +15,13 @@ namespace highlighter
     {
         public static dynamic Settings;
 
+        class OutputData
+        {
+            public string path;
+            public string map;
+            public SortedDictionary<int, string> events;
+        }
+
         static void Main(string[] args)
         {
             Settings = JsonConvert.DeserializeObject(File.ReadAllText("settings.json"));
@@ -36,14 +43,18 @@ namespace highlighter
                 }
             }
 
-            var results = new Dictionary<string, SortedDictionary<int, string>>();
+            var results = new List<OutputData>();
 
             var highlightTasks = new List<Task>();
             foreach (var demo in demos)
             {
                 highlightTasks.Add(Task.Run(async () =>
                 {
-                    results.Add(demo.Path, await demo.GetHighlights());
+                    var result = new OutputData();
+                    result.path = demo.Path;
+                    result.map = demo.Map;
+                    result.events = await demo.GetHighlights();
+                    results.Add(result);
                 }));
             }
 
@@ -51,7 +62,7 @@ namespace highlighter
 
             var output = JsonConvert.SerializeObject(results, Formatting.Indented);
 
-            File.WriteAllText("output.json", output);
+            File.WriteAllText("output.json", output);   
         }
     }
 }
