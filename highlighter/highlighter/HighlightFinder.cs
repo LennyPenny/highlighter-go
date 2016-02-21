@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
@@ -67,7 +68,7 @@ namespace highlighter
 
                 _parser.PlayerKilled += (s, e) =>
                 {
-                    if (e.Killer?.SteamID != (long) Program.Settings.playerID)
+                    if (e.Killer?.SteamID != LocalPlayer().SteamID)
                         return;
 
                     if (_parser.CurrentTime - lastKill <= timeLimit || counter == 0)
@@ -128,6 +129,23 @@ namespace highlighter
                         return;
 
                     _parser.TickDone += RealRoundEnd;
+                };
+            }
+
+            //one deags
+            {
+                _parser.PlayerKilled += (s, e) =>
+                {
+                    if (e.Killer?.SteamID != LocalPlayer().SteamID)
+                        return;
+
+                    if (!e.Headshot)
+                        return;
+
+                    if (e.Weapon.Weapon != EquipmentElement.Deagle)
+                        return;
+
+                    _highlights.Add(_parser.IngameTick - (int)_parser.TickRate * 4, "one-deag");
                 };
             }
         }

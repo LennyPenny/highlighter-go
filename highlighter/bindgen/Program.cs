@@ -15,7 +15,7 @@ namespace bindgen
         class InputData
         {
             public string path;
-            public string map
+            public string map;
             public SortedDictionary<int, string> events;
         }
 
