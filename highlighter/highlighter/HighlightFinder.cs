@@ -30,7 +30,7 @@ namespace highlighter
 
             _highlights = new SortedDictionary<int, string>();
 
-            SetupHighlightHandlers();
+            _parser.MatchStarted += (e, s) => SetupHighlightHandlers(); //we dont want the stuff that's happening in warmup
         }
 
         private Player LocalPlayer()
@@ -146,6 +146,20 @@ namespace highlighter
                         return;
 
                     _highlights.Add(_parser.IngameTick - (int)_parser.TickRate * 4, "one-deag");
+                };
+            }
+
+            //nade kills
+            {
+                _parser.PlayerKilled += (s, e) =>
+                {
+                    if (e.Killer?.SteamID != LocalPlayer().SteamID)
+                        return;
+
+                    if (e.Weapon.Weapon != EquipmentElement.HE)
+                        return;
+
+                    _highlights.Add(_parser.IngameTick - (int)_parser.TickRate * 8, "nade kill");
                 };
             }
         }
