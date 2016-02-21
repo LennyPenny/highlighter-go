@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,6 +27,23 @@ namespace highlighter
             _highlights = new SortedDictionary<int, string>();
 
             SetupHighlightHandlers();
+        }
+
+        private Player LocalPlayer()
+        {
+            return _parser.PlayingParticipants.First(ply => ply.SteamID == (long)Program.Settings.playerID);
+        }
+
+        //this is ugly but the RoundEnded event is broken and fires too early
+        int start = 0; //tick where the clutch started
+        bool clutch = false;
+        int clutchNum = 0; //1vx
+        private void RealRoundEnd(object s, TickDoneEventArgs e)
+        {
+            _parser.TickDone -= RealRoundEnd;
+
+            if (LocalPlayer().IsAlive)
+                _highlights.Add(start - (int)_parser.TickRate * 3, $"1v{clutchNum} clutch win");
         }
 
         private void SetupHighlightHandlers()
@@ -74,6 +92,39 @@ namespace highlighter
                         lastKill = .0f;
                     }
 
+                };
+            }
+
+            //clutch finder (1vX that were won)
+            {
+                _parser.RoundStart += (s, e) =>
+                {
+                    clutch = false;
+                };
+
+                _parser.PlayerKilled += (s, e) =>
+                {
+                    if (clutch)
+                        return;
+
+                    if (!LocalPlayer().IsAlive)
+                        return;
+
+                    if (_parser.PlayingParticipants.Count(ply => ply.Team == LocalPlayer().Team && ply.IsAlive) > 1)
+                        return;
+
+                    clutch = true;
+                    start = _parser.IngameTick;
+                    clutchNum = _parser.PlayingParticipants.Count(ply => ply.Team != LocalPlayer().Team && ply.IsAlive);
+
+                };
+
+                _parser.RoundEnd += (s, e) =>
+                {
+                    if (!clutch)
+                        return;
+
+                    _parser.TickDone += RealRoundEnd;
                 };
             }
         }
