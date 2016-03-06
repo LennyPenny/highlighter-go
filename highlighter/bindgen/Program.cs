@@ -30,19 +30,22 @@ namespace bindgen
 
 
 
-            var input = JsonConvert.DeserializeObject<List<InputData>>(File.ReadAllText(inputpath));
+            if (File.Exists("highlights.cfg"))
+                File.Delete("highlights.cfg");
 
             using (var fileStream = File.OpenWrite("highlights.cfg"))
             {
                 using (var writer = new StreamWriter(fileStream))
                 {
+                    var input = JsonConvert.DeserializeObject<List<InputData>>(File.ReadAllText(inputpath));
+
                     var lastdemo = 0;
                     var demonum = input.Count;
                     foreach (var demo in input)
                     {
                         if (lastdemo == 0)
                         {
-                            writer.WriteLine($"alias highlighter_advance highlighter_demo{lastdemo}");
+                            writer.WriteLine($"alias hl_advance \"hl_demo{lastdemo};\"");
                         }
 
                         var lastEventTick = 0;
@@ -51,14 +54,15 @@ namespace bindgen
                             if (lastEventTick == 0)
                             {
                                 lastEventTick = @event.Key;
-                                writer.WriteLine($"alias highlighter_demo{lastdemo} \"playdemo {demo.path}; alias highligher_advance highlighter_eventick{@event.Key}\"");
+                                writer.WriteLine($"alias hl_demo{lastdemo} \"playdemo {demo.path}; alias hl_advance hl_tick{@event.Key};\"");
                                 continue;
                             }
 
-                            writer.WriteLine($"alias highlighter_eventick{lastEventTick} \"demo_gototick {lastEventTick}; alias highligher_advance highlighter_eventick{@event.Key}\"");
+                            writer.WriteLine($"alias hl_tick{lastEventTick} \"demo_gototick {lastEventTick}; demo_pause; alias hl_advance hl_tick{@event.Key}; alias hl_prev hl_tick{lastEventTick};\"");
                             lastEventTick = @event.Key;
                         }
-                        writer.WriteLine($"alias highlighter_eventick{lastEventTick} \"demo_gototick {lastEventTick}; alias highligher_advance highlighter_demo{lastdemo+1}\"");
+
+                        writer.WriteLine($"alias hl_tick{lastEventTick} \"demo_gototick {lastEventTick}; demo_pause; alias hl_advance hl_demo{lastdemo+1};\"");
                         writer.WriteLine("");
 
                         lastdemo++;
