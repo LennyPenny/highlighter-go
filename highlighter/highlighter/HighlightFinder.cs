@@ -38,24 +38,13 @@ namespace highlighter
             return _parser.PlayingParticipants.First(ply => ply.SteamID == (long)Program.Settings.playerID);
         }
 
-        //this is ugly but the RoundEnded event is broken and fires too early
-        int start = 0; //tick where the clutch started
-        bool clutch = false;
-        int clutchNum = 0; //1vx
-        private void RealRoundEnd(object s, TickDoneEventArgs e)
-        {
-            _parser.TickDone -= RealRoundEnd;
-
-            if (LocalPlayer().IsAlive)
-                _highlights.Add(start - (int)_parser.TickRate * 3, $"1v{clutchNum} clutch win");
-        }
-
         private void SetupHighlightHandlers()
         {
             //multikill finder (finds kills in quick succession)
             {
                 var counter = 0; //keeps track of kills in quick succession
-                var timeLimit = (float)Program.Settings.multiKill.timeLimit; //how many seconds until a multkill expires
+                var timeLimit = (float) Program.Settings.multiKill.timeLimit;
+                    //how many seconds until a multkill expires
                 var start = 0; //tick where the mutlkill started
                 var lastKill = .0f; //time the last kill of the multikill happened
 
@@ -88,8 +77,8 @@ namespace highlighter
 
                     if (_parser.CurrentTime - lastKill > timeLimit)
                     {
-                        if (counter >1)
-                            _highlights.Add(start - (int) _parser.TickRate * 2, $"{counter} kills in quick succession");
+                        if (counter > 1)
+                            _highlights.Add(start - (int) _parser.TickRate*2, $"{counter} kills in quick succession");
 
                         counter = 0;
                         start = 0;
@@ -101,6 +90,12 @@ namespace highlighter
 
             //clutch finder (1vX that were won)
             {
+
+                //this is ugly but the RoundEnded event is broken and fires too early
+                int start = 0; //tick where the clutch started
+                bool clutch = false;
+                int clutchNum = 0; //1vx
+
                 _parser.RoundStart += (s, e) =>
                 {
                     clutch = false;
@@ -123,12 +118,12 @@ namespace highlighter
 
                 };
 
-                _parser.RoundEnd += (s, e) =>
+                _parser.RoundOfficiallyEnd += (s, e) =>
                 {
-                    if (!clutch)
+                    if (!clutch || !LocalPlayer().IsAlive)
                         return;
 
-                    _parser.TickDone += RealRoundEnd;
+                    _highlights.Add(start - (int)_parser.TickRate * 3, $"1v{clutchNum} clutch win");
                 };
             }
 
