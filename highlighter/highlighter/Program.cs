@@ -43,18 +43,19 @@ namespace highlighter
                 }
             }
 
-            var results = new List<OutputData>();
+            OutputData[] results = new OutputData[demos.Count];
 
             var highlightTasks = new List<Task>();
-            foreach (var demo in demos)
+            for (int i = 0; i < demos.Count; i++)
             {
+                var currentdemo = i;
                 highlightTasks.Add(Task.Run(async () =>
                 {
                     var result = new OutputData();
-                    result.path = demo.Path;
-                    result.map = demo.Map;
-                    result.events = await demo.GetHighlights();
-                    results.Add(result);
+                    result.path = demos[currentdemo].Path;
+                    result.map = demos[currentdemo].Map;
+                    result.events = await demos[currentdemo].GetHighlights();
+                    results[currentdemo] = result;
                 }));
             }
 
